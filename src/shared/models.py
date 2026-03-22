@@ -57,6 +57,15 @@ class DuplicateGroup:
     hash: str
     files: List[FileInfo] = field(default_factory=list)
     selected_index: int = 0
+    group_id: int = 0
+    total_size: int = 0
+    wasted_space: int = 0
+    
+    def __post_init__(self):
+        if self.total_size == 0 and self.files:
+            self.total_size = sum(f.size for f in self.files)
+        if self.wasted_space == 0 and self.files:
+            self.wasted_space = self.total_size - self.files[0].size if len(self.files) > 1 else 0
     
     @property
     def size(self) -> int:
@@ -65,12 +74,6 @@ class DuplicateGroup:
     @property
     def count(self) -> int:
         return len(self.files)
-    
-    @property
-    def wasted_space(self) -> int:
-        if self.count <= 1:
-            return 0
-        return self.size * (self.count - 1)
     
     @property
     def selected_file(self) -> Optional[FileInfo]:
@@ -102,6 +105,8 @@ class ScanResult:
     scan_time: float = 0.0
     error_count: int = 0
     skipped_count: int = 0
+    directory: str = ""
+    total_wasted: int = 0
     
     @property
     def duplicate_count(self) -> int:

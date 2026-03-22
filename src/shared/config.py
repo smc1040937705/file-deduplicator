@@ -22,7 +22,9 @@ class Settings:
     
     @recent_directories.setter
     def recent_directories(self, dirs: List[str]):
-        self._settings.setValue("recent_directories", json.dumps(dirs))
+        # Limit to max 10 directories
+        limited_dirs = dirs[:10]
+        self._settings.setValue("recent_directories", json.dumps(limited_dirs))
     
     def add_recent_directory(self, path: str):
         dirs = self.recent_directories
@@ -128,6 +130,17 @@ class Settings:
     @split_header_state.setter
     def split_header_state(self, state: bytes):
         self._settings.setValue("split_header_state", QByteArray(state))
+    
+    @property
+    def splitter_state(self) -> Optional[bytes]:
+        state = self._settings.value("splitter_state")
+        if isinstance(state, QByteArray):
+            return bytes(state)
+        return None
+    
+    @splitter_state.setter
+    def splitter_state(self, state: bytes):
+        self._settings.setValue("splitter_state", QByteArray(state))
     
     def sync(self):
         self._settings.sync()

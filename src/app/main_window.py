@@ -180,6 +180,7 @@ class MainWindow(QMainWindow):
         
         self.group_list.fileSelected.connect(self.preview_panel.set_file_info)
         self.group_list.openFileLocation.connect(self._controller.open_file_location)
+        self.group_list.fileCheckStateChanged.connect(self._update_ui_state)  # 连接勾选状态变化信号
         
         self.search_bar.searchChanged.connect(self.group_list.search)
         
