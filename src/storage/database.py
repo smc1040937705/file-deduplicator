@@ -32,6 +32,13 @@ class Database:
         self._initialized = True
         self._init_database()
     
+    @classmethod
+    def _reset_instance(cls):
+        """重置单例实例 - 仅用于测试"""
+        if cls._instance:
+            cls._instance.close()
+        cls._instance = None
+    
     @contextmanager
     def _get_cursor(self):
         conn = self._get_connection()

@@ -13,7 +13,7 @@ from typing import List, Optional, Dict, Any
 import webbrowser
 
 from ..shared.models import FileInfo, DuplicateGroup, ScanResult, ScanFilter
-from ..shared.utils import format_size, format_datetime, highlight_text
+from ..shared.utils import format_size, format_timestamp, highlight_text
 from ..shared.constants import FILE_TYPE_FILTERS
 
 
@@ -133,11 +133,11 @@ class FilterPanel(QWidget):
         self.filterChanged.emit(filter_config)
     
     def get_filter(self) -> ScanFilter:
-        type_data = self.type_combo.currentData()
+        type_key = self.type_combo.currentData()
         
         extensions = []
-        if type_data != "all":
-            extensions = type_data.split(",") if type_data else []
+        if type_key != "all":
+            extensions = type_key if isinstance(type_key, list) else []
         
         return ScanFilter(
             file_types=[self.type_combo.currentText()],
@@ -162,6 +162,7 @@ class DuplicateGroupList(QTreeWidget):
     groupSelected = pyqtSignal(object)
     fileSelected = pyqtSignal(object)
     openFileLocation = pyqtSignal(str)
+    itemCheckStateChanged = pyqtSignal()
     
     def __init__(self, parent: Optional[QWidget] = None):
         super().__init__(parent)
@@ -184,24 +185,29 @@ class DuplicateGroupList(QTreeWidget):
         header.setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)
         
         self.itemClicked.connect(self._on_item_clicked)
+        self.itemChanged.connect(self._on_item_changed)
     
     def set_groups(self, groups: List[DuplicateGroup]):
         self._groups = groups
         self.clear()
         
         for group in groups:
+            active_files = [f for f in group.files if f.status == "normal"]
+            if not active_files:
+                continue
+            
             group_item = QTreeWidgetItem(self)
-            group_item.setText(0, f"重复组 #{group.group_id + 1} ({len(group.files)} 个文件)")
+            group_item.setText(0, f"重复组 #{group.group_id + 1} ({len(active_files)} 个文件)")
             group_item.setText(1, format_size(group.wasted_space) + " 浪费")
             group_item.setData(0, Qt.ItemDataRole.UserRole, ("group", group.group_id))
             
             group_item.setExpanded(False)
             
-            for file_info in group.files:
+            for file_info in active_files:
                 file_item = QTreeWidgetItem(group_item)
                 file_item.setText(0, file_info.path)
                 file_item.setText(1, format_size(file_info.size))
-                file_item.setText(2, format_datetime(file_info.mtime))
+                file_item.setText(2, format_timestamp(file_info.mtime))
                 file_item.setText(3, file_info.status)
                 file_item.setData(0, Qt.ItemDataRole.UserRole, ("file", file_info))
                 file_item.setCheckState(0, Qt.CheckState.Unchecked)
@@ -225,6 +231,10 @@ class DuplicateGroupList(QTreeWidget):
                 self.groupSelected.emit(self._groups[data[1]])
             elif data[0] == "file":
                 self.fileSelected.emit(data[1])
+    
+    def _on_item_changed(self, item: QTreeWidgetItem, column: int):
+        if column == 0:
+            self.itemCheckStateChanged.emit()
     
     def _show_context_menu(self, pos):
         item = self.itemAt(pos)
@@ -311,7 +321,7 @@ class FilePreviewPanel(QWidget):
         
         self.path_label.setText(file_info.path)
         self.size_label.setText(format_size(file_info.size))
-        self.mtime_label.setText(format_datetime(file_info.mtime))
+        self.mtime_label.setText(format_timestamp(file_info.mtime))
         self.hash_label.setText(file_info.hash or "-")
         self.status_label.setText(file_info.status)
 

@@ -54,9 +54,12 @@ class FileInfo:
 
 @dataclass
 class DuplicateGroup:
+    group_id: int
     hash: str
     files: List[FileInfo] = field(default_factory=list)
     selected_index: int = 0
+    total_size: int = 0
+    wasted_space: int = 0
     
     @property
     def size(self) -> int:
@@ -67,12 +70,6 @@ class DuplicateGroup:
         return len(self.files)
     
     @property
-    def wasted_space(self) -> int:
-        if self.count <= 1:
-            return 0
-        return self.size * (self.count - 1)
-    
-    @property
     def selected_file(self) -> Optional[FileInfo]:
         if 0 <= self.selected_index < len(self.files):
             return self.files[self.selected_index]
@@ -80,28 +77,36 @@ class DuplicateGroup:
     
     def to_dict(self) -> Dict[str, Any]:
         return {
+            "group_id": self.group_id,
             "hash": self.hash,
             "files": [f.to_dict() for f in self.files],
             "selected_index": self.selected_index,
+            "total_size": self.total_size,
+            "wasted_space": self.wasted_space,
         }
     
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'DuplicateGroup':
         return cls(
+            group_id=data.get("group_id", 0),
             hash=data["hash"],
             files=[FileInfo.from_dict(f) for f in data["files"]],
             selected_index=data.get("selected_index", 0),
+            total_size=data.get("total_size", 0),
+            wasted_space=data.get("wasted_space", 0),
         )
 
 
 @dataclass
 class ScanResult:
+    directory: str = ""
     total_files: int = 0
     total_size: int = 0
     duplicate_groups: List[DuplicateGroup] = field(default_factory=list)
     scan_time: float = 0.0
     error_count: int = 0
     skipped_count: int = 0
+    total_wasted: int = 0
     
     @property
     def duplicate_count(self) -> int:
@@ -117,23 +122,27 @@ class ScanResult:
     
     def to_dict(self) -> Dict[str, Any]:
         return {
+            "directory": self.directory,
             "total_files": self.total_files,
             "total_size": self.total_size,
             "duplicate_groups": [g.to_dict() for g in self.duplicate_groups],
             "scan_time": self.scan_time,
             "error_count": self.error_count,
             "skipped_count": self.skipped_count,
+            "total_wasted": self.total_wasted,
         }
     
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'ScanResult':
         return cls(
+            directory=data.get("directory", ""),
             total_files=data.get("total_files", 0),
             total_size=data.get("total_size", 0),
             duplicate_groups=[DuplicateGroup.from_dict(g) for g in data.get("duplicate_groups", [])],
             scan_time=data.get("scan_time", 0.0),
             error_count=data.get("error_count", 0),
             skipped_count=data.get("skipped_count", 0),
+            total_wasted=data.get("total_wasted", 0),
         )
 
 

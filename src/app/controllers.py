@@ -98,6 +98,14 @@ class AppController(QObject):
             lambda c, t: self.operationProgress.emit(c, t)
         )
         
+        # 更新 _current_result 中的文件状态
+        if self._current_result:
+            processed_paths = {f.path for f in files}
+            for group in self._current_result.duplicate_groups:
+                for file_info in group.files:
+                    if file_info.path in processed_paths:
+                        file_info.status = "quarantined"
+        
         self.operationFinished.emit("移动到隔离区", success, fail)
     
     def delete_files(self, files: List[FileInfo], use_trash: bool = True):
@@ -107,6 +115,14 @@ class AppController(QObject):
             files, self._current_snapshot_id, use_trash,
             lambda c, t: self.operationProgress.emit(c, t)
         )
+        
+        # 更新 _current_result 中的文件状态
+        if self._current_result:
+            processed_paths = {f.path for f in files}
+            for group in self._current_result.duplicate_groups:
+                for file_info in group.files:
+                    if file_info.path in processed_paths:
+                        file_info.status = "deleted"
         
         self.operationFinished.emit("删除文件", success, fail)
     
