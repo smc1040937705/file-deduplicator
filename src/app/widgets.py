@@ -4,7 +4,7 @@ from PyQt6.QtWidgets import (
     QGroupBox, QCheckBox, QComboBox, QSpinBox, QProgressBar,
     QFileDialog, QMessageBox, QMenu, QHeaderView, QTabWidget,
     QTextEdit, QDialog, QDialogButtonBox, QFormLayout, QListWidget,
-    QListWidgetItem, QAbstractItemView
+    QListWidgetItem, QAbstractItemView, QFormLayout
 )
 from PyQt6.QtCore import Qt, pyqtSignal, QSize
 from PyQt6.QtGui import QAction, QIcon, QColor, QBrush, QFont, QDesktopServices
@@ -136,8 +136,11 @@ class FilterPanel(QWidget):
         type_data = self.type_combo.currentData()
         
         extensions = []
-        if type_data != "all":
-            extensions = type_data.split(",") if type_data else []
+        if type_data != "all" and type_data is not None:
+            if isinstance(type_data, list):
+                extensions = type_data
+            elif isinstance(type_data, str):
+                extensions = type_data.split(",") if type_data else []
         
         return ScanFilter(
             file_types=[self.type_combo.currentText()],
@@ -162,6 +165,7 @@ class DuplicateGroupList(QTreeWidget):
     groupSelected = pyqtSignal(object)
     fileSelected = pyqtSignal(object)
     openFileLocation = pyqtSignal(str)
+    fileCheckStateChanged = pyqtSignal()  # 新增：文件勾选状态变化信号
     
     def __init__(self, parent: Optional[QWidget] = None):
         super().__init__(parent)
@@ -184,6 +188,7 @@ class DuplicateGroupList(QTreeWidget):
         header.setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)
         
         self.itemClicked.connect(self._on_item_clicked)
+        self.itemChanged.connect(self._on_item_changed)  # 连接勾选状态变化信号
     
     def set_groups(self, groups: List[DuplicateGroup]):
         self._groups = groups
@@ -225,6 +230,11 @@ class DuplicateGroupList(QTreeWidget):
                 self.groupSelected.emit(self._groups[data[1]])
             elif data[0] == "file":
                 self.fileSelected.emit(data[1])
+    
+    def _on_item_changed(self, item: QTreeWidgetItem, column: int):
+        # 当勾选状态变化时发出信号
+        if column == 0:
+            self.fileCheckStateChanged.emit()
     
     def _show_context_menu(self, pos):
         item = self.itemAt(pos)

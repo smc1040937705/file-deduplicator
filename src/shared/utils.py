@@ -12,9 +12,11 @@ def format_size(size: int) -> str:
     return f"{size:.2f} PB"
 
 
-def format_datetime(dt: datetime) -> str:
+def format_datetime(dt) -> str:
     if dt is None:
         return ""
+    if isinstance(dt, (int, float)):
+        dt = datetime.fromtimestamp(dt)
     return dt.strftime("%Y-%m-%d %H:%M:%S")
 
 
@@ -24,24 +26,37 @@ def format_timestamp(timestamp: float) -> str:
     return format_datetime(datetime.fromtimestamp(timestamp))
 
 
-def highlight_text(text: str, keywords: str, 
-                   prefix: str = '<span style="background-color: #ffff00;">',
-                   suffix: str = '</span>') -> str:
+def highlight_text(text: str, keywords, 
+                   prefix: str = '<mark>',
+                   suffix: str = '</mark>',
+                   case_sensitive: bool = False) -> str:
     if not keywords or not text:
         return text
     
+    # Support list of keywords
+    if isinstance(keywords, list):
+        keyword_list = keywords
+    else:
+        keyword_list = str(keywords).split()
+    
     result = text
-    for keyword in keywords.split():
+    for keyword in keyword_list:
         if not keyword:
             continue
-        lower_text = result.lower()
-        lower_keyword = keyword.lower()
+        
+        if case_sensitive:
+            search_text = result
+            search_keyword = keyword
+        else:
+            search_text = result.lower()
+            search_keyword = keyword.lower()
+        
         start = 0
         parts = []
         last_end = 0
         
         while True:
-            pos = lower_text.find(lower_keyword, start)
+            pos = search_text.find(search_keyword, start)
             if pos == -1:
                 parts.append(result[last_end:])
                 break
@@ -53,6 +68,11 @@ def highlight_text(text: str, keywords: str,
             start = last_end
         
         result = ''.join(parts)
+        # Update search_text for next iteration
+        if case_sensitive:
+            search_text = result
+        else:
+            search_text = result.lower()
     
     return result
 

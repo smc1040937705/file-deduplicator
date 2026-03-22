@@ -25,22 +25,35 @@ class FileScanner:
         self._cancelled = False
     
     def _should_skip(self, path: Path) -> bool:
+        # Check if any parent directory in the path should be skipped
         if self.filter.skip_hidden:
             try:
-                if path.name.startswith('.') or (os.name == 'nt' and path.stat().st_file_attributes & 2):
-                    return True
+                # Check if path or any parent starts with '.'
+                for part in path.parts:
+                    if part.startswith('.'):
+                        return True
+                # On Windows, check hidden attribute
+                if os.name == 'nt':
+                    try:
+                        if path.stat().st_file_attributes & 2:
+                            return True
+                    except (OSError, AttributeError):
+                        pass
             except (OSError, AttributeError):
                 pass
         
         if self.filter.skip_system:
             try:
                 if os.name == 'nt':
-                    attrs = path.stat().st_file_attributes
-                    if attrs & (stat.FILE_ATTRIBUTE_SYSTEM | stat.FILE_ATTRIBUTE_TEMPORARY):
-                        return True
-                else:
-                    if path.name in SYSTEM_FOLDERS:
-                        return True
+                    try:
+                        attrs = path.stat().st_file_attributes
+                        if attrs & (stat.FILE_ATTRIBUTE_SYSTEM | stat.FILE_ATTRIBUTE_TEMPORARY):
+                            return True
+                    except (OSError, AttributeError):
+                        pass
+                # Check if path name is in system folders
+                if path.name in SYSTEM_FOLDERS:
+                    return True
             except (OSError, AttributeError):
                 pass
         
@@ -81,7 +94,9 @@ class FileScanner:
     
     def scan_directory(self, directory: str, 
                        progress_callback: Optional[Callable[[int, int, str], None]] = None) -> List[FileInfo]:
-        self.reset()
+        # Only reset if not already cancelled (to allow pre-cancellation)
+        if not self._cancelled:
+            self.reset()
         files = []
         root_path = Path(directory)
         
@@ -160,9 +175,9 @@ class FileScanner:
                     f.is_duplicate = True
                 
                 dup_group = DuplicateGroup(
-                    group_id=group_id,
                     hash=file_hash,
                     files=group_files,
+                    group_id=group_id,
                     total_size=total_size,
                     wasted_space=wasted,
                 )

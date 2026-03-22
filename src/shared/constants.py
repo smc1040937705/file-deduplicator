@@ -1,8 +1,11 @@
+DB_NAME = "file_deduplicator.db"
+
 APP_NAME = "FileDeduplicator"
 APP_VERSION = "1.0.0"
 ORGANIZATION = "FileDeduplicator"
 
 DEFAULT_CHUNK_SIZE = 1024 * 1024 * 8
+HASH_ALGORITHM = "sha256"
 MAX_RECENT_DIRS = 10
 
 FILE_TYPE_FILTERS = {
@@ -33,6 +36,26 @@ DATE_FILTERS = {
 }
 
 QUARANTINE_DIR_NAME = ".deduplicator_quarantine"
+
+SYSTEM_FOLDERS = {
+    "System Volume Information",
+    "$RECYCLE.BIN",
+    "Recovery",
+    "Config.Msi",
+    "Windows",
+    "Program Files",
+    "Program Files (x86)",
+    ".git",
+    ".svn",
+    ".hg",
+    "__pycache__",
+    ".pytest_cache",
+    ".mypy_cache",
+    ".tox",
+    "node_modules",
+    ".idea",
+    ".vscode",
+}
 
 SCAN_STATUS_PENDING = "pending"
 SCAN_STATUS_RUNNING = "running"
