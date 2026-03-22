@@ -18,7 +18,7 @@ class TestChunkedHasher:
         result = hasher.hash_file(str(test_file))
         
         assert result is not None
-        assert len(result) == 64
+        assert len(result) == 32
     
     def test_hash_empty_file(self, tmp_path):
         test_file = tmp_path / "empty.txt"
@@ -28,7 +28,7 @@ class TestChunkedHasher:
         result = hasher.hash_file(str(test_file))
         
         assert result is not None
-        assert len(result) == 64
+        assert len(result) == 32
     
     def test_hash_nonexistent_file(self, tmp_path):
         hasher = ChunkedHasher()

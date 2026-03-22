@@ -29,6 +29,9 @@ class FileScanner:
             try:
                 if path.name.startswith('.') or (os.name == 'nt' and path.stat().st_file_attributes & 2):
                     return True
+                for parent in path.parents:
+                    if parent.name.startswith('.'):
+                        return True
             except (OSError, AttributeError):
                 pass
         
@@ -81,12 +84,14 @@ class FileScanner:
     
     def scan_directory(self, directory: str, 
                        progress_callback: Optional[Callable[[int, int, str], None]] = None) -> List[FileInfo]:
-        self.reset()
         files = []
         root_path = Path(directory)
         
         if not root_path.exists():
             raise FileNotFoundError(f"Directory not found: {directory}")
+        
+        if self._cancelled:
+            return files
         
         total_files = 0
         processed = 0
