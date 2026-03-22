@@ -1,8 +1,10 @@
 APP_NAME = "FileDeduplicator"
 APP_VERSION = "1.0.0"
 ORGANIZATION = "FileDeduplicator"
+DB_NAME = "file_deduplicator.db"
 
 DEFAULT_CHUNK_SIZE = 1024 * 1024 * 8
+HASH_ALGORITHM = "md5"
 MAX_RECENT_DIRS = 10
 
 FILE_TYPE_FILTERS = {
@@ -33,6 +35,13 @@ DATE_FILTERS = {
 }
 
 QUARANTINE_DIR_NAME = ".deduplicator_quarantine"
+
+SYSTEM_FOLDERS = {
+    "desktop.ini", "thumbs.db", "ehthumbs.db",
+    ".ds_store", "$recycle.bin", "system volume information",
+    "pagefile.sys", "hiberfil.sys", "swapfile.sys",
+    ".trashes", ".spotlight", ".fseventsd",
+}
 
 SCAN_STATUS_PENDING = "pending"
 SCAN_STATUS_RUNNING = "running"

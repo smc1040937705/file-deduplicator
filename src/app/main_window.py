@@ -180,11 +180,13 @@ class MainWindow(QMainWindow):
         
         self.group_list.fileSelected.connect(self.preview_panel.set_file_info)
         self.group_list.openFileLocation.connect(self._controller.open_file_location)
+        self.group_list.checkedFilesChanged.connect(self._update_ui_state)
         
         self.search_bar.searchChanged.connect(self.group_list.search)
         
         self.quarantine_panel.fileRestored.connect(self._on_restore_file)
         self.quarantine_panel.fileDeleted.connect(self._on_delete_from_quarantine)
+        self.quarantine_panel.clearAllRequested.connect(self._on_clear_quarantine)
     
     def _restore_state(self):
         geometry = self._controller.get_window_geometry()
@@ -280,6 +282,7 @@ class MainWindow(QMainWindow):
         if self._current_result:
             self.group_list.set_groups(self._current_result.duplicate_groups)
         
+        self.preview_panel.clear()
         self._refresh_quarantine()
     
     @property
@@ -358,6 +361,14 @@ class MainWindow(QMainWindow):
             self._refresh_quarantine()
         else:
             QMessageBox.critical(self, "删除失败", message)
+    
+    def _on_clear_quarantine(self):
+        success, message = self._controller.clear_quarantine()
+        if success:
+            self.status_label.setText(message)
+            self._refresh_quarantine()
+        else:
+            QMessageBox.critical(self, "清空失败", message)
     
     def _on_about(self):
         QMessageBox.about(

@@ -15,6 +15,8 @@ def format_size(size: int) -> str:
 def format_datetime(dt: datetime) -> str:
     if dt is None:
         return ""
+    if isinstance(dt, (int, float)):
+        dt = datetime.fromtimestamp(dt)
     return dt.strftime("%Y-%m-%d %H:%M:%S")
 
 
@@ -26,33 +28,58 @@ def format_timestamp(timestamp: float) -> str:
 
 def highlight_text(text: str, keywords: str, 
                    prefix: str = '<span style="background-color: #ffff00;">',
-                   suffix: str = '</span>') -> str:
+                   suffix: str = '</span>',
+                   case_sensitive: bool = True) -> str:
     if not keywords or not text:
         return text
     
+    if isinstance(keywords, list):
+        keyword_list = keywords
+    else:
+        keyword_list = keywords.split()
+    
     result = text
-    for keyword in keywords.split():
+    for keyword in keyword_list:
         if not keyword:
             continue
-        lower_text = result.lower()
-        lower_keyword = keyword.lower()
-        start = 0
-        parts = []
-        last_end = 0
-        
-        while True:
-            pos = lower_text.find(lower_keyword, start)
-            if pos == -1:
-                parts.append(result[last_end:])
-                break
-            parts.append(result[last_end:pos])
-            parts.append(prefix)
-            parts.append(result[pos:pos + len(keyword)])
-            parts.append(suffix)
-            last_end = pos + len(keyword)
-            start = last_end
-        
-        result = ''.join(parts)
+        if not case_sensitive:
+            lower_text = result.lower()
+            lower_keyword = keyword.lower()
+            start = 0
+            parts = []
+            last_end = 0
+            
+            while True:
+                pos = lower_text.find(lower_keyword, start)
+                if pos == -1:
+                    parts.append(result[last_end:])
+                    break
+                parts.append(result[last_end:pos])
+                parts.append(prefix)
+                parts.append(result[pos:pos + len(keyword)])
+                parts.append(suffix)
+                last_end = pos + len(keyword)
+                start = last_end
+            
+            result = ''.join(parts)
+        else:
+            start = 0
+            parts = []
+            last_end = 0
+            
+            while True:
+                pos = result.find(keyword, start)
+                if pos == -1:
+                    parts.append(result[last_end:])
+                    break
+                parts.append(result[last_end:pos])
+                parts.append(prefix)
+                parts.append(result[pos:pos + len(keyword)])
+                parts.append(suffix)
+                last_end = pos + len(keyword)
+                start = last_end
+            
+            result = ''.join(parts)
     
     return result
 

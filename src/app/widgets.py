@@ -68,6 +68,8 @@ class FilterPanel(QWidget):
         self.type_combo = QComboBox()
         self.type_combo.addItem("全部文件", "all")
         for name, exts in FILE_TYPE_FILTERS.items():
+            if name == "all":
+                continue
             self.type_combo.addItem(name, exts)
         self.type_combo.currentIndexChanged.connect(self._on_filter_changed)
         
@@ -136,8 +138,11 @@ class FilterPanel(QWidget):
         type_data = self.type_combo.currentData()
         
         extensions = []
-        if type_data != "all":
-            extensions = type_data.split(",") if type_data else []
+        if type_data != "all" and type_data:
+            if isinstance(type_data, list):
+                extensions = type_data
+            elif isinstance(type_data, str):
+                extensions = type_data.split(",")
         
         return ScanFilter(
             file_types=[self.type_combo.currentText()],
@@ -162,6 +167,7 @@ class DuplicateGroupList(QTreeWidget):
     groupSelected = pyqtSignal(object)
     fileSelected = pyqtSignal(object)
     openFileLocation = pyqtSignal(str)
+    checkedFilesChanged = pyqtSignal()
     
     def __init__(self, parent: Optional[QWidget] = None):
         super().__init__(parent)
@@ -184,6 +190,7 @@ class DuplicateGroupList(QTreeWidget):
         header.setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)
         
         self.itemClicked.connect(self._on_item_clicked)
+        self.itemChanged.connect(self._on_item_changed)
     
     def set_groups(self, groups: List[DuplicateGroup]):
         self._groups = groups
@@ -225,6 +232,9 @@ class DuplicateGroupList(QTreeWidget):
                 self.groupSelected.emit(self._groups[data[1]])
             elif data[0] == "file":
                 self.fileSelected.emit(data[1])
+    
+    def _on_item_changed(self, item: QTreeWidgetItem, column: int):
+        self.checkedFilesChanged.emit()
     
     def _show_context_menu(self, pos):
         item = self.itemAt(pos)
@@ -300,6 +310,13 @@ class FilePreviewPanel(QWidget):
         layout.addWidget(info_group)
         layout.addStretch()
     
+    def clear(self):
+        self.path_label.setText("-")
+        self.size_label.setText("-")
+        self.mtime_label.setText("-")
+        self.hash_label.setText("-")
+        self.status_label.setText("-")
+    
     def set_file_info(self, file_info: Optional[FileInfo]):
         if file_info is None:
             self.path_label.setText("-")
@@ -319,6 +336,7 @@ class FilePreviewPanel(QWidget):
 class QuarantinePanel(QWidget):
     fileRestored = pyqtSignal(str)
     fileDeleted = pyqtSignal(str)
+    clearAllRequested = pyqtSignal()
     
     def __init__(self, parent: Optional[QWidget] = None):
         super().__init__(parent)
@@ -357,6 +375,15 @@ class QuarantinePanel(QWidget):
             item.setData(Qt.ItemDataRole.UserRole, (name, original_path))
             self.file_list.addItem(item)
     
+    def get_all_quarantined_names(self) -> List[str]:
+        names = []
+        for i in range(self.file_list.count()):
+            item = self.file_list.item(i)
+            data = item.data(Qt.ItemDataRole.UserRole)
+            if data:
+                names.append(data[0])
+        return names
+    
     def _on_restore(self):
         item = self.file_list.currentItem()
         if item:
@@ -370,16 +397,17 @@ class QuarantinePanel(QWidget):
             self.fileDeleted.emit(data[0])
     
     def _on_clear(self):
+        names = self.get_all_quarantined_names()
+        if not names:
+            return
+        
         reply = QMessageBox.question(
             self, "确认清空",
-            "确定要清空隔离区吗？所有文件将被永久删除！",
+            f"确定要清空隔离区吗？所有 {len(names)} 个文件将被永久删除！",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
         )
         if reply == QMessageBox.StandardButton.Yes:
-            for i in range(self.file_list.count()):
-                item = self.file_list.item(i)
-                data = item.data(Qt.ItemDataRole.UserRole)
-                self.fileDeleted.emit(data[0])
+            self.clearAllRequested.emit()
 
 
 class ExportDialog(QDialog):

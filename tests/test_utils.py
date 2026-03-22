@@ -45,7 +45,8 @@ class TestHighlightText:
         text = "This is a test file path"
         result = highlight_text(text, "test")
         
-        assert "<b>test</b>" in result or "<mark>test</mark>" in result
+        assert "test" in result
+        assert '<span style="background-color: #ffff00;">test</span>' in result
     
     def test_multiple_keywords(self):
         text = "This is a test file path"
