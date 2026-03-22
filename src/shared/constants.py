@@ -4,6 +4,8 @@ ORGANIZATION = "FileDeduplicator"
 
 DEFAULT_CHUNK_SIZE = 1024 * 1024 * 8
 MAX_RECENT_DIRS = 10
+HASH_ALGORITHM = "sha256"
+DB_NAME = "file_deduplicator.db"
 
 FILE_TYPE_FILTERS = {
     "all": "*",
@@ -47,3 +49,5 @@ FILE_STATUS_DELETED = "deleted"
 OPERATION_MOVE = "move"
 OPERATION_DELETE = "delete"
 OPERATION_RESTORE = "restore"
+
+SYSTEM_FOLDERS = {"System Volume Information", "$Recycle.Bin", "Program Files", "Program Files (x86)", "Windows", "Recovery"}

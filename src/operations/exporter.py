@@ -6,7 +6,7 @@ from typing import List, Optional
 from io import StringIO
 
 from ..shared.models import ScanResult, DuplicateGroup, FileInfo
-from ..shared.utils import format_size, format_datetime, escape_html
+from ..shared.utils import format_size, format_timestamp, format_datetime, escape_html
 
 
 class ReportExporter:
@@ -29,7 +29,7 @@ class ReportExporter:
                             file_info.path,
                             file_info.size,
                             format_size(file_info.size),
-                            format_datetime(file_info.mtime),
+                            format_timestamp(file_info.mtime),
                             "是" if file_info.is_duplicate else "否",
                             file_info.status,
                         ])
@@ -37,7 +37,7 @@ class ReportExporter:
                 writer.writerow([])
                 writer.writerow(["统计信息"])
                 writer.writerow(["扫描目录", result.directory])
-                writer.writerow(["扫描时间", format_datetime(result.scan_time)])
+                writer.writerow(["扫描时间", format_timestamp(result.scan_time)])
                 writer.writerow(["总文件数", result.total_files])
                 writer.writerow(["重复组数", len(result.duplicate_groups)])
                 writer.writerow(["浪费空间", format_size(result.total_wasted)])
@@ -163,7 +163,7 @@ class ReportExporter:
         </div>
         <div class="summary-item">
             <div class="summary-label">扫描时间</div>
-            <div class="summary-value">""" + format_datetime(result.scan_time) + """</div>
+            <div class="summary-value">""" + format_timestamp(result.scan_time) + """</div>
         </div>
         <div class="summary-item">
             <div class="summary-label">总文件数</div>
@@ -207,7 +207,7 @@ class ReportExporter:
                 <tr>
                     <td class="path">{escape_html(file_info.path)}</td>
                     <td>{format_size(file_info.size)}</td>
-                    <td>{format_datetime(file_info.mtime)}</td>
+                    <td>{format_timestamp(file_info.mtime)}</td>
                     <td>{file_info.status}</td>
                 </tr>
 """)
