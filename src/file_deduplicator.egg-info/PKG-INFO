@@ -1,0 +1,10 @@
+Metadata-Version: 2.4
+Name: file-deduplicator
+Version: 1.0.0
+Summary: 文件去重整理器 - 扫描、识别和管理重复文件
+Requires-Python: >=3.10
+Requires-Dist: PyQt6>=6.5.0
+Requires-Dist: send2trash>=1.8.0
+Provides-Extra: dev
+Requires-Dist: pytest>=7.0.0; extra == "dev"
+Requires-Dist: pytest-cov>=4.0.0; extra == "dev"
